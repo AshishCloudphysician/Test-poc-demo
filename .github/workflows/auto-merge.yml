@@ -32,7 +32,7 @@ jobs:
 
      - name: Push changes to poc-demo using PAT
       run: |
-        git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/AshishCloudphysician/Test-poc-demo.git
+        git remote set-url origin https://${{ secrets.TOKEN }}@github.com/AshishCloudphysician/Test-poc-demo.git
         git push origin poc-demo
 
 

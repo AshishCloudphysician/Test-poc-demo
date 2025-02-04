@@ -13,18 +13,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Fetch full history
+          fetch-depth: 0  # Fetch full history for merging
 
       - name: Set up Git
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
+      - name: Fetch latest changes
+        run: |
+          git fetch origin  # Ensure we have the latest branches
+
       - name: Merge master into poc-demo
         run: |
           git checkout poc-demo  # Switch to poc-demo branch
+          git pull origin poc-demo  # Ensure poc-demo is up to date
           git merge origin/master  # Merge master into poc-demo
 
       - name: Push changes to poc-demo
         run: |
           git push origin poc-demo
+

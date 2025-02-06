@@ -21,19 +21,24 @@ jobs:
           git config --global user.email "actions@github.com"
 
       - name: Fetch latest changes
-        run: |
-          git fetch origin  # Ensure we have the latest branches
+        run: git fetch origin  # Ensure we have the latest branches
 
-      - name: Merge master into poc-demo
+      - name: Merge master into poc-demo with conflict resolution
         run: |
           git checkout poc-demo  # Switch to poc-demo branch
           git pull origin poc-demo  # Ensure poc-demo is up to date
-          git merge origin/master  # Merge master into poc-demo
+          git merge origin/master || true  # Prevent failure on conflict
+          git diff --name-only --diff-filter=U | while read file; do
+            git checkout --theirs "$file"  # Keep master branch changes
+            git add "$file"
+          done
+          git commit -m "Auto-resolved merge conflicts" || echo "No conflicts to resolve"
 
       - name: Push changes to poc-demo using PAT
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.TOKEN }}@github.com/AshishCloudphysician/Test-poc-demo.git
-          git push origin poc-demo
+          git push origin poc-demo || echo "No changes to push"
+
 
 
 

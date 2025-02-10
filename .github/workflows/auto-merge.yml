@@ -25,7 +25,7 @@ jobs:
 
       - name: Merge master into poc-demo with conflict resolution
         run: |
-          git checkout poc-demo  # Switch to poc-demo branch
+          git checkout  # Switch to poc-demo branch
           git pull origin poc-demo  # Ensure poc-demo is up to date
           git merge origin/master || true  # Prevent failure on conflict
           git diff --name-only --diff-filter=U | while read file; do

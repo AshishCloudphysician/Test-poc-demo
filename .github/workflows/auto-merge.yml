@@ -1,3 +1,4 @@
+
 name: Auto Merge Master to poc-demo
 
 on:
@@ -25,7 +26,7 @@ jobs:
 
       - name: Merge master into poc-demo with conflict resolution
         run: |
-          git checkout  # Switch to poc-demo branch
+          git checkout poc-demo  # Switch to poc-demo branch
           git pull origin poc-demo  # Ensure poc-demo is up to date
           git merge origin/master || true  # Prevent failure on conflict
           git diff --name-only --diff-filter=U | while read file; do
@@ -36,8 +37,9 @@ jobs:
 
       - name: Push changes to poc-demo using PAT
         run: |
-          git remote set-url origin https://x-access-token:${{ secrets.TOKEN }}@github.com/AshishCloudphysician/Test-poc-demo.git
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/AshishCloudphysician/Test-poc-demo-private.git
           git push origin poc-demo || echo "No changes to push"
+
 
 
 

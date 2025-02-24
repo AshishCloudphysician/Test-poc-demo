@@ -26,20 +26,30 @@ jobs:
         run: |
           git checkout poc-demo  # Switch to poc-demo branch
           git pull origin poc-demo --rebase  # Ensure it's up to date
-
-          # Merge master into poc-demo, excluding .github/workflows/*
+          
+          # Merge master into poc-demo without committing
           git merge --no-ff --no-commit origin/master || true
 
           # Undo any changes in .github/workflows/
           git checkout origin/poc-demo -- .github/workflows/
 
-          # Stage only the required changes
+          # Resolve conflicts automatically (keep master changes)
+          if git diff --name-only --diff-filter=U | grep .; then
+            git diff --name-only --diff-filter=U | while read file; do
+              git checkout --theirs "$file"
+              git add "$file"
+            done
+            git commit -m "Auto-resolved merge conflicts by keeping master changes"
+          fi
+
+          # Commit and push changes if there are any
           if git diff --name-only --cached | grep -v '.github/workflows/' | grep .; then
             git commit -m "Auto-merge master into poc-demo (excluding GitHub Actions workflows)"
             git push origin poc-demo
           else
             echo "No changes to push"
           fi
+
 
 
 

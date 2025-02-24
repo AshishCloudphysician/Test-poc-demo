@@ -21,19 +21,31 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-      - name: Merge master into poc-demo
+
+      - name: Merge master into poc-demo (excluding GitHub Actions workflows)
         run: |
           git checkout poc-demo  # Switch to poc-demo branch
           git pull origin poc-demo --rebase  # Ensure it's up to date
-          git merge origin/master || true  # Attempt merge, prevent failure
-          # Resolve conflicts (keep master changes)
-          if git diff --name-only --diff-filter=U | grep .; then
-            git diff --name-only --diff-filter=U | while read file; do
+
+          # Merge master into poc-demo, excluding .github/workflows/*
+          git merge --no-ff --no-commit origin/master
+
+          # Unstage changes to .github/workflows/*
+          git reset .github/workflows/*
+          git checkout -- .github/workflows/*
+
+          # Commit the merge (excluding the unstaged files)
+          git commit -m "Auto-merge master into poc-demo (excluding GitHub Actions workflows)"
+
+          # Resolve conflicts (keep master changes) for non-workflow files
+          if git diff --name-only --diff-filter=U | grep -v '.github/workflows/' | grep .; then
+            git diff --name-only --diff-filter=U | grep -v '.github/workflows/' | while read file; do
               git checkout --theirs "$file"
               git add "$file"
             done
-            git commit -m "Auto-resolved merge conflicts"
+            git commit -m "Auto-resolved merge conflicts (excluding GitHub Actions workflows)"
           fi
+
       - name: Push changes to poc-demo
         run: |
           git push origin poc-demo || echo "No changes to push"

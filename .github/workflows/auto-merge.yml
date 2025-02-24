@@ -13,39 +13,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
-          repository: AshishCloudphysician/Test-poc-demo-private
-          fetch-depth: 0  # Fetch full history for proper merging
+          repository: AshishCloudphysician/Test-poc-demo-private  # Your repo
+          fetch-depth: 0  # Fetch full history for merging
           token: ${{ secrets.PAT }}  # Use a PAT with write access
 
       - name: Set up Git
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-
       - name: Merge master into poc-demo
         run: |
-          git checkout poc-demo
-          git pull origin poc-demo --rebase
-          git merge origin/master || true
-
-          # Ignore .github/workflows folder during merge
-          git checkout --ours .github/workflows
-          git add .github/workflows
-
-          # Handle merge conflicts (prefer master’s changes for other files)
+          git checkout poc-demo  # Switch to poc-demo branch
+          git pull origin poc-demo --rebase  # Ensure it's up to date
+          git merge origin/master || true  # Attempt merge, prevent failure
+          # Resolve conflicts (keep master changes)
           if git diff --name-only --diff-filter=U | grep .; then
             git diff --name-only --diff-filter=U | while read file; do
-              if [[ "$file" != ".github/workflows/"* ]]; then
-                git checkout --theirs "$file"
-                git add "$file"
-              fi
+              git checkout --theirs "$file"
+              git add "$file"
             done
-            git commit -m "Auto-resolved merge conflicts (excluding .github/workflows)"
+            git commit -m "Auto-resolved merge conflicts"
           fi
-
-      - name: Push changes to poc-demo (only if changes exist)
+      - name: Push changes to poc-demo
         run: |
-          git diff --quiet HEAD origin/poc-demo || git push origin poc-demo
+          git push origin poc-demo || echo "No changes to push"
 
 
 

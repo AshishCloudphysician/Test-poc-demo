@@ -15,6 +15,7 @@ jobs:
         with:
           repository: AshishCloudphysician/Test-poc-demo-private  # Your repository
           fetch-depth: 0  # Fetch full history for merging
+          token: ${{ secrets.PAT }}  # Use a PAT with write access
 
       - name: Set up Git
         run: |
@@ -49,3 +50,4 @@ jobs:
           else
             echo "✅ No changes to push"
           fi
+

@@ -28,12 +28,13 @@ jobs:
           git pull origin poc-demo --rebase
           git merge origin/master || true
 
-          # Exclude .github/workflows from the merge (only if the folder exists)
+          # Reset .github/workflows *before* finalizing the merge
           if [ -d ".github/workflows" ]; then
-            git restore --source=origin/poc-demo --staged --worktree .github/workflows/
+            git checkout origin/poc-demo -- .github/workflows/
+            git add .github/workflows/
           fi
 
-          # If there are merge conflicts, keep master changes
+          # Handle merge conflicts (prefer master’s changes)
           if git diff --name-only --diff-filter=U | grep .; then
             git diff --name-only --diff-filter=U | while read file; do
               git checkout --theirs "$file"
@@ -45,4 +46,5 @@ jobs:
       - name: Push changes to poc-demo (only if changes exist)
         run: |
           git diff --quiet HEAD origin/poc-demo || git push origin poc-demo
+
 

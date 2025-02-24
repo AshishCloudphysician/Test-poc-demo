@@ -3,7 +3,7 @@ name: Auto Merge Master to poc-demo
 on:
   push:
     branches:
-      - master  # Trigger workflow when master branch is updated
+      - master  # Trigger workflow when master is updated
 
 jobs:
   auto-merge:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
-          repository: AshishCloudphysician/Test-poc-demo-private  # Your repository
+          repository: AshishCloudphysician/Test-poc-demo-private  # Your repo
           fetch-depth: 0  # Fetch full history for merging
           token: ${{ secrets.PAT }}  # Use a PAT with write access
 
@@ -21,33 +21,20 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-
-      - name: Merge master into poc-demo (excluding GitHub Actions workflows)
+      - name: Merge master into poc-demo
         run: |
-          git checkout poc-demo  # Switch to `poc-demo` branch
+          git checkout poc-demo  # Switch to poc-demo branch
           git pull origin poc-demo --rebase  # Ensure it's up to date
-          
-          # Merge `master` into `poc-demo` without committing automatically
-          git merge --no-ff --no-commit origin/master || true
-
-          # Restore `.github/workflows/` from `poc-demo` to exclude it from the merge
-          git checkout origin/poc-demo -- .github/workflows/
-
-          # 🔥 Resolve merge conflicts automatically (keep `master` changes)
+          git merge origin/master || true  # Attempt merge, prevent failure
+          # Resolve conflicts (keep master changes)
           if git diff --name-only --diff-filter=U | grep .; then
-            echo "⚠️ Merge conflict detected, resolving..."
             git diff --name-only --diff-filter=U | while read file; do
-              git checkout --theirs "$file"  # Keep `master` changes
+              git checkout --theirs "$file"
               git add "$file"
             done
-            git commit -m "Auto-resolved merge conflicts by keeping master changes"
+            git commit -m "Auto-resolved merge conflicts"
           fi
-
-          # ✅ Commit and push changes only if there are any
-          if git diff --name-only --cached | grep -v '.github/workflows/' | grep .; then
-            git commit -m "Auto-merge master into poc-demo (excluding GitHub Actions workflows)"
-            git push origin poc-demo
-          else
-            echo "✅ No changes to push"
-          fi
+      - name: Push changes to poc-demo
+        run: |
+          git push origin poc-demo || echo "No changes to push"
 

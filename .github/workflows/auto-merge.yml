@@ -1,0 +1,51 @@
+name: Check Developer Branch Sync & Notify If Outdated
+
+on:
+  pull_request:
+    branches:
+      - qa  # Trigger the workflow when a PR is created for the `qa` branch
+
+jobs:
+  check-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the target repository
+        run: |
+          git clone --depth=1 https://x-access-token:${{ secrets.PAT }}@github.com/AshishCloudphysician/Test-poc-demo-private.git target-repo
+          cd target-repo
+          git fetch --prune --unshallow
+
+      - name: Get the developer branch name
+        id: get_branch
+        run: echo "BRANCH_NAME=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
+
+      - name: Check if the developer branch is behind `master`
+        id: check
+        run: |
+          cd target-repo
+          git fetch origin master
+          if git rev-list --left-right origin/${{ env.BRANCH_NAME }}...origin/master | grep '>'; then
+            echo "branch_behind=true" >> $GITHUB_ENV
+          else
+            echo "branch_behind=false" >> $GITHUB_ENV
+          fi
+      
+      - name: Send a notification to Google Chat if the branch is outdated
+        if: env.branch_behind == 'true'
+        run: |
+          curl -X POST -H 'Content-Type: application/json' --data '{
+            "text": "⚠️ *Branch Outdated:* PR #${{ github.event.pull_request.number }} (`${{ env.BRANCH_NAME }}`) in `Test-poc-demo-private` is behind `master`. Please update it before merging."
+          }' "https://chat.googleapis.com/v1/spaces/AAAA7ZrcrhM/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=Adax0wiCdrkex17FhC6rTLXtzUMRvMZgFtQpSYZ6hdk"
+
+      - name: Fail the pipeline if the developer branch is outdated
+        if: env.branch_behind == 'true'
+        run: |
+          echo "❌ Developer branch is behind `master`. Please rebase."
+          exit 1
+
+      - name: Send a notification to Google Chat if the developer branch is up-to-date
+        if: env.branch_behind == 'false'
+        run: |
+          curl -X POST -H 'Content-Type: application/json' --data '{
+            "text": "✅ *Developer Branch Up-to-Date:* PR #${{ github.event.pull_request.number }} (`${{ env.BRANCH_NAME }}`) in `Test-poc-demo-private` is up-to-date with `master`."
+          }' "https://chat.googleapis.com/v1/spaces/AAAA7ZrcrhM/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=Adax0wiCdrkex17FhC6rTLXtzUMRvMZgFtQpSYZ6hdk"

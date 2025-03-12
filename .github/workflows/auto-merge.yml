@@ -2,6 +2,7 @@ name: Check Developer Branch Sync & Notify If Outdated
 
 on:
   pull_request:
+    repository: AshishCloudphysician/Test-poc-demo-private.git
     branches:
       - qa  # Trigger the workflow when a PR is created for the `qa` branch
 
